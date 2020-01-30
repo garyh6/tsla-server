@@ -1,39 +1,20 @@
 require("dotenv").config();
 
-var app = require("express")();
-var server = require("http").Server(app);
-var io = require("socket.io")(server);
+const express = require("express");
+const app = express();
+const mongoose = require("mongoose");
 
-server.listen(4000);
-console.log("Server is running on localhost:4000");
-
-app.get("/", function(req, res) {
-  res.sendFile(__dirname + "/index.html");
+mongoose.connect(process.env.DATABASE_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
 });
+const db = mongoose.connection;
+db.on("error", error => console.error(error));
+db.once("open", () => console.log("Connected to Database"));
 
-io.on("connection", function(socket) {
-  console.log(`Socket ${socket.id} connected.`);
+app.use(express.json());
 
-  socket.emit("add prop", { name: "speed", value: 100 }, ({ err, res }) => {
-    console.log("************ err", err);
-    if (err) return console.log(err);
-    console.log("************ res", res);
-    // console.log("*", `prop: ${name} = ${value}.`);
-  });
+const vehicleRouter = require("./routes");
+app.use("/vehicles", vehicleRouter);
 
-  socket.on("disconnect", () => {
-    console.log(`Socket ${socket.id} disconnected.`);
-  });
-  // socket.on("move", function(data) {
-  //   console.log(data);
-  // });
-});
-
-// const MongoClient = require("mongodb").MongoClient;
-// const uri = `mongodb+srv://admin:${process.env.MONGODB_PASS}@cluster0-jvnro.mongodb.net/test?retryWrites=true&w=majority`;
-// const client = new MongoClient(uri, { useNewUrlParser: true });
-// client.connect(err => {
-//   const collection = client.db("test").collection("devices");
-//   // perform actions on the collection object
-//   client.close();
-// });
+app.listen(4000, () => console.log("Server is running on localhost:4000"));

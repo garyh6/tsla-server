@@ -9,6 +9,9 @@ const ConfigForm = ({ vehicleConfig }) => {
 
   const [config, setConfig] = useState(vehicleConfig);
 
+  const isDev = window.location.hostname === "localhost";
+  const url = isDev ? config.dev : config.prod;
+
   const updateProperty = (key, value) => {
     setConfig({ ...config, [key]: value });
   };
@@ -34,7 +37,7 @@ const ConfigForm = ({ vehicleConfig }) => {
     try {
       await axios({
         method: "patch",
-        url: `http://localhost:4001/properties/${config._id}`,
+        url: `${url}/properties/${config._id}`,
         data: {
           key: newKey,
           value: newValue
@@ -64,7 +67,7 @@ const ConfigForm = ({ vehicleConfig }) => {
       // delete from vehicle
       await axios({
         method: "delete",
-        url: `http://localhost:4001/properties/${config._id}`,
+        url: `${url}/properties/${config._id}`,
         data: {
           key
         }
@@ -101,7 +104,7 @@ const ConfigForm = ({ vehicleConfig }) => {
       try {
         await axios({
           method: "patch",
-          url: `/properties/${config._id}`,
+          url: `${url}/properties/${config._id}`,
           data: {
             key,
             value: elRef.current[refIdx].current.state.value
@@ -130,7 +133,7 @@ const ConfigForm = ({ vehicleConfig }) => {
       sm: { span: 14 }
     }
   };
-
+  // todo allow copy paste of disabled
   return (
     <Row span={24} className="wrapper-form">
       <Form {...formItemLayout}>
@@ -173,7 +176,7 @@ const ConfigForm = ({ vehicleConfig }) => {
       </Form>
       <Col span={24} className="group-add-property">
         <Row gutter={[0, 0]}>
-          <Col span={9}>
+          <Col span={8}>
             <Input
               type="text"
               placeholder="key"
@@ -181,7 +184,7 @@ const ConfigForm = ({ vehicleConfig }) => {
               onChange={e => setNewKey(e.target.value)}
             />
           </Col>
-          <Col span={9}>
+          <Col span={8}>
             <Input
               type="text"
               placeholder="value"
@@ -189,7 +192,7 @@ const ConfigForm = ({ vehicleConfig }) => {
               onChange={e => setNewValue(e.target.value)}
             />
           </Col>
-          <Col span={6}>
+          <Col span={3}>
             <Button onClick={addProperty}>Add Property</Button>
           </Col>
         </Row>

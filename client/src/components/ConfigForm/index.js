@@ -15,9 +15,10 @@ const ConfigForm = ({ vehicleConfig }) => {
 
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState();
-  const addProperty = e => {
+  const addProperty = async e => {
     e.preventDefault();
-    //todo refactor
+
+    // if keys exist don't overwrite
     if (!newKey || !newValue) return;
     if (Object.keys(config.properties).includes(newKey)) return;
     if (Object.keys(config).includes(newKey)) return;
@@ -28,45 +29,64 @@ const ConfigForm = ({ vehicleConfig }) => {
     setConfig(newConfig);
     setNewKey("");
     setNewValue();
-    // post to server
-    axios({
-      method: "patch",
-      url: `/vehicles/${config._id}`,
-      data: {
-        key: newKey,
-        value: newValue
-      }
-    })
-      .then(res => {
-        console.log("*********** res  ", res);
-      })
-      .catch(err => console.log("*********** err  ", err));
+
+    // post to vehicle
+    try {
+      await axios({
+        method: "patch",
+        url: `http://localhost:4001/properties/${config._id}`,
+        data: {
+          key: newKey,
+          value: newValue
+        }
+      });
+      // post to server
+      axios({
+        method: "patch",
+        url: `/vehicles/${config._id}`,
+        data: {
+          key: newKey,
+          value: newValue
+        }
+      });
+    } catch (err) {
+      console.log("************ err", err);
+    }
   };
 
-  const deleteProperty = key => {
+  const deleteProperty = async key => {
     let newProps = { ...config };
     delete newProps.properties[key];
     setConfig(newProps);
-    // send delete to server
-    axios({
-      method: "delete",
-      url: `http://localhost:4001/vehicles/${config._id}`,
-      data: {
-        key
-      }
-    })
-      .then(res => {
-        console.log("*********** res  ", res);
-        // if successfully updated vehicle - update db
-      })
-      .catch(err => console.log("*********** err  ", err));
+    // send delete
+    try {
+      // todo localhost url
+      // delete from vehicle
+      await axios({
+        method: "delete",
+        url: `http://localhost:4001/properties/${config._id}`,
+        data: {
+          key
+        }
+      });
+      // delete from sever
+      axios({
+        method: "delete",
+        url: `/vehicles/${config._id}`,
+        data: {
+          key
+        }
+      });
+    } catch (err) {
+      console.log("************ err", err);
+    }
   };
   // todo revisit useRef list with calculated length
   const len =
     Object.keys(config).length - 1 + Object.keys(config.properties).length;
   const elRef = useRef([...Array(len)].map(() => createRef()));
   const [enabledInput, setEnabledInput] = useState([]);
-  const toggleEnableInput = (key, refIdx) => {
+  const toggleEnableInput = async (key, refIdx) => {
     let newList = [...enabledInput];
     const idx = newList.indexOf(key);
     if (idx >= 0) {
@@ -77,19 +97,26 @@ const ConfigForm = ({ vehicleConfig }) => {
     setEnabledInput(newList);
 
     if (idx >= 0) {
-      // send patch to server
-      axios({
-        method: "patch",
-        url: `/vehicles/${config._id}`,
-        data: {
-          key,
-          value: elRef.current[refIdx].current.state.value
-        }
-      })
-        .then(res => {
-          console.log("*********** res  ", res);
-        })
-        .catch(err => console.log("*********** err  ", err));
+      // send patch to vehicle
+      try {
+        await axios({
+          method: "patch",
+          url: `/properties/${config._id}`,
+          data: {
+            key,
+            value: elRef.current[refIdx].current.state.value
+          }
+        });
+        // send patch to server
+        axios({
+          method: "patch",
+          url: `/vehicles/${config._id}`,
+          data: {
+            key,
+            value: elRef.current[refIdx].current.state.value
+          }
+        });
+      } catch (err) {}
     }
   };
 

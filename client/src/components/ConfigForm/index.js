@@ -1,6 +1,7 @@
 import { Button, Col, Form, Icon, Input, Row } from "antd";
 import axios from "axios";
 import React, { createRef, useRef, useState } from "react";
+import { emitPatchProperty } from "../../sockets/sockets";
 
 const ConfigForm = ({ vehicleConfig }) => {
   if (!vehicleConfig.properties) vehicleConfig.properties = {};
@@ -9,8 +10,7 @@ const ConfigForm = ({ vehicleConfig }) => {
 
   const [config, setConfig] = useState(vehicleConfig);
 
-  const isDev = window.location.hostname === "localhost";
-  const url = isDev ? config.dev : config.prod;
+  const [pendingUpdate, setPendingUpdate] = useState([]);
 
   const updateProperty = (key, value) => {
     setConfig({ ...config, [key]: value });
@@ -26,24 +26,26 @@ const ConfigForm = ({ vehicleConfig }) => {
     if (Object.keys(config.properties).includes(newKey)) return;
     if (Object.keys(config).includes(newKey)) return;
 
-    let newConfig = { ...config };
-    newConfig.properties[newKey] = newValue;
+    setPendingUpdate([...pendingUpdate, newKey]);
 
-    setConfig(newConfig);
+    emitPatchProperty(
+      { newKey, newValue, id: vehicleConfig._id },
+      (err, res) => {
+        if (err) {
+          console.log("************ emit patch err");
+          // remove key from pendingUpdate
+          // change to flash error
+          // dont setConfig
+        } else {
+          console.log("************ should say success", res);
+          // remove from pending
+          // set to delivered
+        }
+      }
+    );
+
     setNewKey("");
     setNewValue();
-
-    // post to server
-    axios({
-      method: "patch",
-      url: `/vehicles/${config._id}`,
-      data: {
-        key: newKey,
-        value: newValue
-      }
-    })
-      .then(res => console.log("************addProperty res", res))
-      .catch(err => console.log("************addProperty err", err));
   };
 
   const deleteProperty = async key => {
@@ -79,6 +81,7 @@ const ConfigForm = ({ vehicleConfig }) => {
 
     if (idx >= 0) {
       // send patch to server
+      // revert to previous config (might need to have pendingConfig)
       axios({
         method: "patch",
         url: `/vehicles/${config._id}`,

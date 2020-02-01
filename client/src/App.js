@@ -8,7 +8,6 @@ import StreamView from "./components/StreamView";
 function App() {
   const [vehicles, setVehicles] = useState([]);
   useEffect(() => {
-    // todo - axios
     axios
       .get("/vehicles")
       .then(res => setVehicles(res.data))

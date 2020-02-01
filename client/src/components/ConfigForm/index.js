@@ -33,56 +33,34 @@ const ConfigForm = ({ vehicleConfig }) => {
     setNewKey("");
     setNewValue();
 
-    // post to vehicle
-    try {
-      await axios({
-        method: "patch",
-        url: `${url}/properties/${config._id}`,
-        data: {
-          key: newKey,
-          value: newValue
-        }
-      });
-      // post to server
-      axios({
-        method: "patch",
-        url: `/vehicles/${config._id}`,
-        data: {
-          key: newKey,
-          value: newValue
-        }
-      });
-    } catch (err) {
-      console.log("************ err", err);
-    }
+    // post to server
+    axios({
+      method: "patch",
+      url: `/vehicles/${config._id}`,
+      data: {
+        key: newKey,
+        value: newValue
+      }
+    })
+      .then(res => console.log("************addProperty res", res))
+      .catch(err => console.log("************addProperty err", err));
   };
 
   const deleteProperty = async key => {
     let newProps = { ...config };
     delete newProps.properties[key];
     setConfig(newProps);
-    // send delete
-    try {
-      // todo localhost url
-      // delete from vehicle
-      await axios({
-        method: "delete",
-        url: `${url}/properties/${config._id}`,
-        data: {
-          key
-        }
-      });
-      // delete from sever
-      axios({
-        method: "delete",
-        url: `/vehicles/${config._id}`,
-        data: {
-          key
-        }
-      });
-    } catch (err) {
-      console.log("************ err", err);
-    }
+
+    // delete from sever
+    axios({
+      method: "delete",
+      url: `/vehicles/${config._id}`,
+      data: {
+        key
+      }
+    })
+      .then(res => console.log("************deleteProperty res", res))
+      .catch(err => console.log("************deleteProperty err", err));
   };
   // todo revisit useRef list with calculated length
   const len =
@@ -100,26 +78,17 @@ const ConfigForm = ({ vehicleConfig }) => {
     setEnabledInput(newList);
 
     if (idx >= 0) {
-      // send patch to vehicle
-      try {
-        await axios({
-          method: "patch",
-          url: `${url}/properties/${config._id}`,
-          data: {
-            key,
-            value: elRef.current[refIdx].current.state.value
-          }
-        });
-        // send patch to server
-        axios({
-          method: "patch",
-          url: `/vehicles/${config._id}`,
-          data: {
-            key,
-            value: elRef.current[refIdx].current.state.value
-          }
-        });
-      } catch (err) {}
+      // send patch to server
+      axios({
+        method: "patch",
+        url: `/vehicles/${config._id}`,
+        data: {
+          key,
+          value: elRef.current[refIdx].current.state.value
+        }
+      })
+        .then(res => console.log("************toggleEnableInput res", res))
+        .catch(err => console.log("************toggleEnableInput err", err));
     }
   };
 

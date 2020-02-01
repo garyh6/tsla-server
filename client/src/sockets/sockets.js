@@ -1,9 +1,13 @@
-import axios from "axios";
+import React from "react";
 import io from "socket.io-client";
-export const socket = io("http://localhost:5000", {
+
+const socket = io("http://localhost:5000", {
   query: `id=MAINCONTROLLEREREREERR`
 });
-// change to uuid
+// change to uuid, what happens when multiple controllers are connected (will break)
+
+const SocketContext = React.createContext(socket);
+export default SocketContext;
 
 export const emitPatchProperty = (data, cb) => {
   console.log("************ server data", data);
@@ -16,22 +20,20 @@ export const emitPatchProperty = (data, cb) => {
 };
 
 socket.on("acknowledge update to control", ({ key, value, id }) => {
-  console.log("************ data", key, value);
+  // todo - this gets called twice (probably once for each vehicle)
+  console.log("************ acknowledge update to control", key, value);
   // should update state and then save to db?
-  axios({
-    method: "patch",
-    url: `/vehicles/${id}`,
-    data: {
-      key,
-      value
-    }
-  })
-    .then(res => {
-      //   let newConfig = { ...config };
-      //   newConfig.properties[key] = value;
-
-      //   setConfig(newConfig);
-      console.log("************addProperty res", res);
-    })
-    .catch(err => console.log("************addProperty err", err));
+  // axios({
+  //   method: "patch",
+  //   url: `/vehicles/${id}`,
+  //   data: {
+  //     key,
+  //     value
+  //   }
+  // })
+  //   .then(res => {
+  //     console.log("************ addProperty res", res);
+  //   })
+  //   .catch(err => console.log("************ addProperty err", err));
+  // if this fails delivered prop will be erased
 });

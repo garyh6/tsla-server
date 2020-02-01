@@ -3,8 +3,8 @@ import "antd/dist/antd.css";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import "./App.css";
-import Properties from "./components/Properties";
 import StreamView from "./components/StreamView";
+import Vehicles from "./components/Vehicles";
 function App() {
   const [vehicles, setVehicles] = useState([]);
   useEffect(() => {
@@ -23,7 +23,7 @@ function App() {
       </Row>
       <Row span={24}>
         <Col span={8}>
-          <Properties vehicles={vehicles}></Properties>
+          <Vehicles vehicles={vehicles}></Vehicles>
         </Col>
         <Col span={16}>
           <StreamView></StreamView>

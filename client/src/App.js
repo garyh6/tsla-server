@@ -2,6 +2,7 @@ import { Col, Row } from "antd";
 import "antd/dist/antd.css";
 import React from "react";
 import "./App.css";
+import Map from "./components/Map";
 import StreamView from "./components/StreamView";
 import Vehicles from "./components/Vehicles";
 import { Provider } from "./VehiclesContext";
@@ -11,7 +12,7 @@ function App() {
     <div className="App">
       <Provider>
         <Row span={24}>
-          <div>MAP</div>
+          <Map></Map>
         </Row>
         <Row span={24}>
           <Col span={8}>

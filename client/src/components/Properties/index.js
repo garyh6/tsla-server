@@ -1,20 +1,24 @@
+// q: how can i modularize / extract out sockets
+
 import { Button, Col, Form, Icon, Input, Row } from "antd";
 import axios from "axios";
 import React, { createRef, useRef, useState } from "react";
-import { emitPatchProperty } from "../../sockets/sockets";
+import { emitPatchProperty, socket } from "../../sockets/sockets";
+import { userId } from "../../utils";
 
 const Properties = ({ vehicleConfig }) => {
   if (!vehicleConfig.properties) vehicleConfig.properties = {};
   const fixedProps = Object.keys(vehicleConfig);
   fixedProps.splice(fixedProps.indexOf("properties"), 1);
 
-  // maybe rename (component state used for pending props)
   const [config, setConfig] = useState(vehicleConfig);
-  // if prop in pending then use pending prop else use mobx
+
   const [pendingUpdate, setPendingUpdate] = useState([]);
 
   const updateProperty = (key, value) => {
-    setConfig({ ...config, [key]: value });
+    let newConfig = { ...config };
+    newConfig.properties[key] = value;
+    setConfig(newConfig);
   };
 
   const [newKey, setNewKey] = useState("");
@@ -44,9 +48,7 @@ const Properties = ({ vehicleConfig }) => {
           // set to delivered
           let newConfig = { ...config };
           newConfig.properties[newKey] = newValue;
-
           setConfig(newConfig);
-          console.log("************ delivered res", res);
         }
       }
     );
@@ -122,20 +124,78 @@ const Properties = ({ vehicleConfig }) => {
     setEnabledInput(newList);
 
     if (idx >= 0) {
-      // send patch to server
-      // revert to previous config (might need to have pendingConfig)
-      axios({
-        method: "patch",
-        url: `/vehicles/${config._id}`,
-        data: {
-          key,
-          value: elRef.current[refIdx].current.state.value
+      console.log(
+        "************ config.properties[key]",
+        config.properties[key]
+      );
+      // send patch to socket
+      emitPatchProperty(
+        {
+          origin: userId,
+          newKey: key,
+          newValue: config.properties[key],
+          id: vehicleConfig._id
+        },
+        (err, res) => {
+          if (err) {
+            console.log("************ emit patch err");
+          } else {
+            console.log("************ should say success", res);
+
+            axios({
+              method: "patch",
+              url: `/vehicles/${config._id}`,
+              data: {
+                key,
+                value: elRef.current[refIdx].current.state.value
+              }
+            })
+              .then(res => {
+                console.log("************toggleEnableInput res", res);
+              })
+              .catch(err =>
+                console.log("************toggleEnableInput err", err)
+              );
+            // send patch to server
+            // revert to previous config (might need to have pendingConfig)
+          }
         }
-      })
-        .then(res => console.log("************toggleEnableInput res", res))
-        .catch(err => console.log("************toggleEnableInput err", err));
+      );
     }
   };
+  if (!socket.hasListeners("acknowledge update to control")) {
+    socket.on("acknowledge update to control", ({ key, value, id, origin }) => {
+      console.log(
+        "************ acknowledge update to control",
+        key,
+        value,
+        id,
+        origin
+      );
+      if (origin !== userId) {
+        let newConfig = { ...config };
+        newConfig.properties[key] = value;
+        setConfig(newConfig);
+        return;
+      }
+      axios({
+        method: "patch",
+        url: `/vehicles/${id}`,
+        data: {
+          key,
+          value
+        }
+      })
+        .then(() => {
+          console.log("************ addProperty res");
+          let newConfig = { ...config };
+          newConfig.properties[key] = value;
+          setConfig(newConfig);
+          // remove delivered, flash success
+        })
+        .catch(err => console.log("************ addProperty err", err));
+    });
+  }
 
   const formItemLayout = {
     labelCol: {
@@ -166,6 +226,7 @@ const Properties = ({ vehicleConfig }) => {
                 <Input
                   disabled={!!!enabledInput.includes(key)}
                   defaultValue={config.properties[key]}
+                  value={config.properties[key]}
                   onChange={e => updateProperty(key, e.target.value)}
                   ref={elRef.current[refIdx]}
                   addonAfter={

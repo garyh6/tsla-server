@@ -55,6 +55,41 @@ const Properties = ({ vehicleConfig }) => {
     setNewValue();
   };
 
+  // kind of hacky - duplicate listeners per vehicle, per rerender
+  if (!socket.hasListeners("acknowledge update to control")) {
+    socket.on("acknowledge update to control", ({ key, value, id }) => {
+      console.log("************ acknowledge update to control", key, value, id);
+      axios({
+        method: "patch",
+        url: `/vehicles/${id}`,
+        data: {
+          key,
+          value
+        }
+      })
+        .then(() => {
+          console.log("************ addProperty res");
+          let newConfig = { ...config };
+          newConfig.properties[key] = value;
+          setConfig(newConfig);
+          // remove delivered, flash success
+        })
+        .catch(err => console.log("************ addProperty err", err));
+    });
+  }
+  if (!socket.hasListeners("pending update from controller")) {
+    socket.on("pending update from controller", ({ newKey, newValue }) => {
+      console.log(
+        "got a pending update from another controller",
+        newKey,
+        newValue
+      );
+      let newConfig = { ...config };
+      newConfig.properties[newKey] = newValue;
+      setConfig(newConfig);
+    });
+  }
+
   const deleteProperty = async key => {
     let newProps = { ...config };
     delete newProps.properties[key];

@@ -2,12 +2,15 @@ import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import uuid from "uuid";
 import { socket } from "../../sockets/sockets";
+// import { Context } from "../../VehiclesContext";
 import "./streamView.scss";
 
 const StreamView = () => {
   // todo should probably save to db - oh well
   const [streamLog, setStreamLog] = useState([]);
   const endOfLogRef = useRef();
+  // const { vehicles, updateVehicles } = useContext(Context);
+  // console.log("************ vehicles", vehicles);
 
   useEffect(() => {
     endOfLogRef.current.scrollIntoView({
@@ -40,7 +43,8 @@ const StreamView = () => {
           }
         })
           .then(res => {
-            // need to update component state of properties....
+            // need to update component state of Properties
+            // updateVehicles({ vehicleId, temperature, x, y, datetime });
             console.log("************ updated");
           })
           .catch(err => {});

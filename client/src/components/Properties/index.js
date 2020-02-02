@@ -1,9 +1,15 @@
 // q: how can i modularize / extract out sockets
 
+// in case data out of sync (resync button)
+// if vehicle is offline - no indication
 import { Button, Col, Form, Icon, Input, Row } from "antd";
 import axios from "axios";
-import React, { createRef, useRef, useState } from "react";
-import { emitPatchProperty, socket } from "../../sockets/sockets";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  emitDeleteProperty,
+  emitPatchProperty,
+  socket
+} from "../../sockets/sockets";
 import { userId } from "../../utils";
 
 const Properties = ({ vehicleConfig }) => {
@@ -13,12 +19,22 @@ const Properties = ({ vehicleConfig }) => {
 
   const [config, setConfig] = useState(vehicleConfig);
 
+  const elRef = useRef([]);
+  useEffect(() => {
+    // long to short will have trailing nulls
+    elRef.current = elRef.current.slice(0, config.properties.length);
+  });
+
   const [pendingUpdate, setPendingUpdate] = useState([]);
 
-  const updateProperty = (key, value) => {
+  const updateConfigHelper = (key, value) => {
     let newConfig = { ...config };
     newConfig.properties[key] = value;
     setConfig(newConfig);
+  };
+
+  const updateProperty = (key, value) => {
+    updateConfigHelper(key, value);
   };
 
   const [newKey, setNewKey] = useState("");
@@ -36,20 +52,17 @@ const Properties = ({ vehicleConfig }) => {
     emitPatchProperty(
       { newKey, newValue, id: vehicleConfig._id },
       (err, res) => {
-        if (err) {
-          console.log("************ emit patch err");
-          // remove key from pendingUpdate
-          // change to flash error
-          // dont setConfig
-        } else {
-          console.log("************ should say success", res);
-          // remove from pending
-          // add to pending config as delivered
-          // set to delivered
-          let newConfig = { ...config };
-          newConfig.properties[newKey] = newValue;
-          setConfig(newConfig);
-        }
+        if (err) return console.log("************ emit patch err");
+        // remove key from pendingUpdate
+        // change to flash error
+        // dont setConfig
+
+        console.log("************ should say success", res);
+        // remove from pending
+        // add to pending config as delivered
+        // set to delivered
+
+        updateConfigHelper(newKey, newValue);
       }
     );
 
@@ -71,47 +84,58 @@ const Properties = ({ vehicleConfig }) => {
       })
         .then(() => {
           console.log("************ addProperty res");
-          let newConfig = { ...config };
-          newConfig.properties[key] = value;
-          setConfig(newConfig);
+          updateConfigHelper(key, value);
           // remove delivered, flash success
         })
         .catch(err => console.log("************ addProperty err", err));
     });
   }
   if (!socket.hasListeners("pending update from controller")) {
-    socket.on("pending update from controller", ({ newKey, newValue }) => {
-      console.log(
-        "got a pending update from another controller",
-        newKey,
-        newValue
-      );
-      let newConfig = { ...config };
-      newConfig.properties[newKey] = newValue;
-      setConfig(newConfig);
+    socket.on(
+      "pending update from controller",
+      ({ newKey: key, newValue: value }) => {
+        console.log("got a pending update from another controller", key, value);
+        updateConfigHelper(key, value);
+      }
+    );
+  }
+
+  if (!socket.hasListeners("acknowledge delete to control")) {
+    socket.on("acknowledge delete to control", ({ key, origin, id }) => {
+      console.log("************ acknowledge delete to control", key, id);
+      console.log("************ origin", origin);
+      console.log("************ userId", userId);
+
+      axios({
+        method: "delete",
+        url: `/vehicles/${id}`,
+        data: {
+          key
+        }
+      })
+        .then(() => {
+          console.log("************ end delete res");
+          let newProps = { ...config };
+          delete newProps.properties[key];
+          setConfig(newProps);
+          // remove delivered, flash success
+        })
+        .catch(err => console.log("************ end delete err", err));
     });
   }
 
   const deleteProperty = async key => {
-    let newProps = { ...config };
-    delete newProps.properties[key];
-    setConfig(newProps);
-
-    // delete from sever
-    axios({
-      method: "delete",
-      url: `/vehicles/${config._id}`,
-      data: {
-        key
+    emitDeleteProperty(
+      { key, id: vehicleConfig._id, origin: userId },
+      (err, res) => {
+        if (err) return console.log("emit delete err");
+        // delete from sever
+        // set to pending
+        console.log("set to pending");
       }
-    })
-      .then(res => console.log("************ deleteProperty res", res))
-      .catch(err => console.log("************ deleteProperty err", err));
+    );
   };
-  // todo revisit useRef list with calculated length
-  const len =
-    Object.keys(config).length - 1 + Object.keys(config.properties).length;
-  const elRef = useRef([...Array(len)].map(() => createRef()));
+
   const [enabledInput, setEnabledInput] = useState([]);
   const toggleEnableInput = async (key, refIdx) => {
     let newList = [...enabledInput];
@@ -124,11 +148,8 @@ const Properties = ({ vehicleConfig }) => {
     setEnabledInput(newList);
 
     if (idx >= 0) {
-      console.log(
-        "************ config.properties[key]",
-        config.properties[key]
-      );
       // send patch to socket
+      console.log("************ elRef", elRef);
       emitPatchProperty(
         {
           origin: userId,
@@ -137,28 +158,29 @@ const Properties = ({ vehicleConfig }) => {
           id: vehicleConfig._id
         },
         (err, res) => {
-          if (err) {
-            console.log("************ emit patch err");
-          } else {
-            console.log("************ should say success", res);
+          if (err) return console.log("************ emit patch err");
+          console.log("************ elRef 2", elRef);
+          console.log("************ idx", refIdx);
+          console.log("************ elRef.current[idx]", elRef.current[idx]);
 
-            axios({
-              method: "patch",
-              url: `/vehicles/${config._id}`,
-              data: {
-                key,
-                value: elRef.current[refIdx].current.state.value
-              }
+          // console.log("************ should say success", res);
+
+          axios({
+            method: "patch",
+            url: `/vehicles/${config._id}`,
+            data: {
+              key,
+              value: elRef.current[refIdx].state.value
+            }
+          })
+            .then(res => {
+              console.log("************toggleEnableInput res", res);
             })
-              .then(res => {
-                console.log("************toggleEnableInput res", res);
-              })
-              .catch(err =>
-                console.log("************toggleEnableInput err", err)
-              );
-            // send patch to server
-            // revert to previous config (might need to have pendingConfig)
-          }
+            .catch(err =>
+              console.log("************toggleEnableInput err", err)
+            );
+          // send patch to server
+          // revert to previous config (might need to have pendingConfig)
         }
       );
     }
@@ -173,9 +195,7 @@ const Properties = ({ vehicleConfig }) => {
         origin
       );
       if (origin !== userId) {
-        let newConfig = { ...config };
-        newConfig.properties[key] = value;
-        setConfig(newConfig);
+        updateConfigHelper(key, value);
         return;
       }
       axios({
@@ -188,9 +208,7 @@ const Properties = ({ vehicleConfig }) => {
       })
         .then(() => {
           console.log("************ addProperty res");
-          let newConfig = { ...config };
-          newConfig.properties[key] = value;
-          setConfig(newConfig);
+          updateConfigHelper(key, value);
           // remove delivered, flash success
         })
         .catch(err => console.log("************ addProperty err", err));
@@ -213,7 +231,7 @@ const Properties = ({ vehicleConfig }) => {
       <Form {...formItemLayout}>
         {fixedProps.map(key => (
           <Form.Item key={key} label={key} className="form-item-group">
-            <Input disabled defaultValue={config[key]}></Input>
+            <Input disabled value={config[key]}></Input>
           </Form.Item>
         ))}
 
@@ -225,10 +243,9 @@ const Properties = ({ vehicleConfig }) => {
               <Form.Item label={key} key={key} className="form-item-group">
                 <Input
                   disabled={!!!enabledInput.includes(key)}
-                  defaultValue={config.properties[key]}
                   value={config.properties[key]}
                   onChange={e => updateProperty(key, e.target.value)}
-                  ref={elRef.current[refIdx]}
+                  ref={el => (elRef.current[refIdx] = el)}
                   addonAfter={
                     <Icon
                       className="icon icon-edit"

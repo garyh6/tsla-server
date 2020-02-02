@@ -1,15 +1,14 @@
-import axios from "axios";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import uuid from "uuid";
-import { socket } from "../../sockets/sockets";
-// import { Context } from "../../VehiclesContext";
+import { streamEvents } from "../../sockets/sockets";
+import { Context } from "../../VehiclesContext";
 import "./streamView.scss";
 
 const StreamView = () => {
   // todo should probably save to db - oh well
   const [streamLog, setStreamLog] = useState([]);
   const endOfLogRef = useRef();
-  // const { vehicles, updateVehicles } = useContext(Context);
+  const { vehicles, updateVehicle } = useContext(Context);
   // console.log("************ vehicles", vehicles);
 
   useEffect(() => {
@@ -20,37 +19,12 @@ const StreamView = () => {
     });
   }, [streamLog]);
 
-  // console.log("************ streamLog", streamLog);
-  if (!socket.hasListeners("new stream data from vehicle")) {
-    socket.on(
-      "new stream data from vehicle",
-      ({ vehicleId, temperature, x, y, datetime }) => {
-        console.log("new stream data", vehicleId, temperature, x, y, datetime);
-        const locationMsg = `${datetime} - Vehicle ${vehicleId} is at (${x}, ${y}).`;
-        const tempMsg = `${datetime} - Vehicle ${vehicleId} temperature is ${temperature} C.`;
-
-        // not sure what's going on here - [...streamLog, new stuff]
-        // streamLog always []
-        setStreamLog(msg => [...msg, locationMsg, tempMsg]);
-
-        axios({
-          method: "patch",
-          url: `/vehicles/${vehicleId}/internal`,
-          data: {
-            temperature,
-            x,
-            y
-          }
-        })
-          .then(res => {
-            // need to update component state of Properties
-            // updateVehicles({ vehicleId, temperature, x, y, datetime });
-            console.log("************ updated");
-          })
-          .catch(err => {});
-      }
-    );
-  }
+  useEffect(() => {
+    streamEvents({ setStreamLog }, (err, { vehicleId, temperature, x, y }) => {
+      console.log("************ var ");
+      updateVehicle({ vehicleId, temperature, x, y });
+    });
+  }, [vehicles]);
 
   return (
     <div className="wrapper-stream">

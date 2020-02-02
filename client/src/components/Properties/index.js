@@ -4,24 +4,24 @@
 // if vehicle is offline - no indication
 import { Button, Col, Form, Icon, Input, Row } from "antd";
 import axios from "axios";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   emitDeleteProperty,
   emitPatchProperty,
   socket
 } from "../../sockets/sockets";
 import { userId } from "../../utils";
-import { Context } from "../../VehiclesContext";
 
 const Properties = ({ vehicleConfig }) => {
-  const { vehicles } = useContext(Context);
-  console.log("************ context", vehicles);
-
   if (!vehicleConfig.properties) vehicleConfig.properties = {};
   const fixedProps = Object.keys(vehicleConfig);
   fixedProps.splice(fixedProps.indexOf("properties"), 1);
 
   const [config, setConfig] = useState(vehicleConfig);
+
+  useEffect(() => {
+    setConfig(vehicleConfig);
+  }, [vehicleConfig]);
 
   const elRef = useRef([]);
   useEffect(() => {

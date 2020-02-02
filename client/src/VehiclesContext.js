@@ -16,8 +16,10 @@ export const Provider = props => {
       const { data } = await axios.get("/vehicles");
       setVehicles(data);
       setLoading(false);
+      // console.log("set vehiclessss");
+      // console.log("************ data", data);
     } catch (err) {
-      if (err) return console.log(err);
+      if (err) return console.log("error getting vehicles", err);
     }
   };
 
@@ -25,17 +27,20 @@ export const Provider = props => {
     getVehicles();
   }, []);
 
-  const updateVehicle = ({ vehicleId, temperature, x, y, datetime }) => {
+  const updateVehicle = ({ vehicleId, temperature, x, y }) => {
+    console.log("************ vehicles", vehicles);
     console.log("************ vehicleId", vehicleId);
+    if (!vehicles.length) return;
     const idx = vehicles.findIndex(obj => obj._id === vehicleId);
 
     console.log("************ idx", idx);
     const newVehicle = { ...vehicles[idx], temperature, x, y };
     const newVehicles = [...vehicles];
-    newVehicles.splice(idx, 1, newVehicle);
-    console.log("************ newVehicle", newVehicle);
+    newVehicles[idx] = newVehicle;
 
-    setVehicles(newVehicle);
+    console.log("************ newVehicle", newVehicles);
+
+    setVehicles(newVehicles);
   };
 
   const vehiclesContext = {

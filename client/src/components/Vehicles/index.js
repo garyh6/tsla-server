@@ -5,7 +5,7 @@ import Properties from "../Properties";
 import "./properties.scss";
 const Vehicles = () => {
   const { vehicles, loading } = useContext(Context);
-
+  console.log("************ vehicles in Vehicles", vehicles);
   return (
     <>
       {loading ? (

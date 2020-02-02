@@ -74,14 +74,14 @@ router.patch(
   "/:id/internal",
   getVehicle,
   async ({ body: { temperature, x, y } }, res) => {
-    console.log("************ req.body");
+    console.log("************ updating");
     res.vehicle.temperature = temperature;
     res.vehicle.x = x;
     res.vehicle.y = y;
 
     try {
       const updatedVehicle = await res.vehicle.save();
-      console.log("************ updatedVehicle", updatedVehicle);
+      // console.log("************ updatedVehicle", updatedVehicle);
       res.json(updatedVehicle);
     } catch (err) {
       res.status(400).json({ message: err.message });

@@ -69,4 +69,24 @@ router.delete("/:id", getVehicle, checkImmutableKeys, async (req, res) => {
   }
 });
 
+// Actual Car Values
+router.patch(
+  "/:id/internal",
+  getVehicle,
+  async ({ body: { temperature, x, y } }, res) => {
+    console.log("************ req.body");
+    res.vehicle.temperature = temperature;
+    res.vehicle.x = x;
+    res.vehicle.y = y;
+
+    try {
+      const updatedVehicle = await res.vehicle.save();
+      console.log("************ updatedVehicle", updatedVehicle);
+      res.json(updatedVehicle);
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
+  }
+);
+
 module.exports = router;

@@ -54,7 +54,9 @@ export const streamEvents = ({ setStreamLog }, cb) => {
         // console.log("************ updating dd", vehicles);
         // this will so die with more vehicles
         return cb(null, { vehicleId, temperature, x, y });
-      } catch (err) {}
+      } catch (err) {
+        if (err) return console.log("patch err", err);
+      }
     }
   );
 };

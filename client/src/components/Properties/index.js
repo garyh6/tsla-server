@@ -1,18 +1,16 @@
-// q: how can i modularize / extract out sockets
+// q: how can i not do removeAllListener cleanup
 
 // in case data out of sync (resync button)
 // if vehicle is offline - no indication
 import { Button, Col, Form, Icon, Input, Row } from "antd";
 import axios from "axios";
-import React, { useEffect, useRef, useState } from "react";
-import {
-  emitDeleteProperty,
-  emitPatchProperty,
-  socket
-} from "../../sockets/sockets";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { SocketContext } from "../../contexts/SocketContext";
 import { userId } from "../../utils";
-
 const Properties = ({ vehicleConfig }) => {
+  const { socket, emitDeleteProperty, emitPatchProperty } = useContext(
+    SocketContext
+  );
   if (!vehicleConfig.properties) vehicleConfig.properties = {};
   const fixedProps = Object.keys(vehicleConfig);
   fixedProps.splice(fixedProps.indexOf("properties"), 1);
@@ -29,7 +27,7 @@ const Properties = ({ vehicleConfig }) => {
     elRef.current = elRef.current.slice(0, config.properties.length);
   });
 
-  const [pendingUpdate, setPendingUpdate] = useState([]);
+  // const [pendingUpdate, setPendingUpdate] = useState([]);
 
   const updateConfigHelper = (key, value) => {
     let newConfig = { ...config };
@@ -45,18 +43,19 @@ const Properties = ({ vehicleConfig }) => {
   const [newValue, setNewValue] = useState();
   const addProperty = async e => {
     e.preventDefault();
-
+    console.log("1 adding prop");
     // if keys exist don't overwrite
     if (!newKey || !newValue) return;
     if (Object.keys(config.properties).includes(newKey)) return;
     if (Object.keys(config).includes(newKey)) return;
 
-    setPendingUpdate([...pendingUpdate, newKey]);
+    // setPendingUpdate([...pendingUpdate, newKey]);
 
     emitPatchProperty(
       { newKey, newValue, id: vehicleConfig._id },
       (err, res) => {
         if (err) return console.log("************ emit patch err");
+        console.log("2 emit prop");
         // remove key from pendingUpdate
         // change to flash error
         // dont setConfig
@@ -73,51 +72,54 @@ const Properties = ({ vehicleConfig }) => {
     setNewValue();
   };
 
-  // kind of hacky - duplicate listeners per vehicle, per rerender
-  if (!socket.hasListeners("acknowledge update to control")) {
-    socket.on("acknowledge update to control", ({ key, value, id }) => {
-      axios({
+  socket.removeAllListeners("acknowledge update to control");
+  socket.on("acknowledge update to control", async ({ key, value, id }) => {
+    console.log("hope this workssss");
+    try {
+      await axios({
         method: "patch",
         url: `http://${process.env.REACT_APP_DEV_SERVER}/vehicles/${id}`,
         data: {
           key,
           value
         }
-      })
-        .then(() => {
-          updateConfigHelper(key, value);
-          // remove delivered, flash success
-        })
-        .catch(err => console.log("************ addProperty err", err));
-    });
-  }
-  if (!socket.hasListeners("pending update from controller")) {
-    socket.on(
-      "pending update from controller",
-      ({ newKey: key, newValue: value }) => {
-        updateConfigHelper(key, value);
-      }
-    );
-  }
+      });
+      updateConfigHelper(key, value);
+      // remove delivered, flash success
+    } catch (err) {
+      console.log("************ addProperty err", err);
+    }
+  });
 
-  if (!socket.hasListeners("acknowledge delete to control")) {
-    socket.on("acknowledge delete to control", ({ key, origin, id }) => {
-      axios({
+  socket.removeAllListeners("pending update from controller");
+  socket.on(
+    "pending update from controller",
+    ({ newKey: key, newValue: value }) => {
+      updateConfigHelper(key, value);
+    }
+  );
+
+  socket.removeAllListeners("acknowledge delete to control");
+  socket.on("acknowledge delete to control", async ({ key, origin, id }) => {
+    console.log("************ 1 delete");
+    try {
+      await axios({
         method: "delete",
         url: `http://${process.env.REACT_APP_DEV_SERVER}/vehicles/${id}`,
         data: {
           key
         }
-      })
-        .then(() => {
-          let newProps = { ...config };
-          delete newProps.properties[key];
-          setConfig(newProps);
-          // remove delivered, flash success
-        })
-        .catch(err => console.log("************ end delete err", err));
-    });
-  }
+      });
+
+      let newConfig = { ...config };
+      delete newConfig.properties[key];
+      setConfig(newConfig);
+      console.log("************ shouldve worked", newConfig);
+      // remove delivered, flash success
+    } catch (err) {
+      return console.log("************ end delete err", err);
+    }
+  });
 
   const deleteProperty = async key => {
     emitDeleteProperty(
@@ -126,6 +128,7 @@ const Properties = ({ vehicleConfig }) => {
         if (err) return console.log("emit delete err");
         // delete from sever
         // set to pending
+        console.log("************ 2 delete");
       }
     );
   };
@@ -150,57 +153,52 @@ const Properties = ({ vehicleConfig }) => {
           newValue: config.properties[key],
           id: vehicleConfig._id
         },
-        (err, res) => {
+        async (err, res) => {
           if (err) return console.log("************ emit patch err");
+          try {
+            const res = await axios({
+              method: "patch",
+              url: `http://${process.env.REACT_APP_DEV_SERVER}/vehicles/${config._id}`,
+              data: {
+                key,
+                value: elRef.current[refIdx].state.value
+              }
+            });
+            console.log("************toggleEnableInput res", res);
+          } catch (err) {
+            console.log("************toggleEnableInput err", err);
+          }
 
-          axios({
-            method: "patch",
-            url: `http://${process.env.REACT_APP_DEV_SERVER}/vehicles/${config._id}`,
-            data: {
-              key,
-              value: elRef.current[refIdx].state.value
-            }
-          })
-            .then(res => {
-              console.log("************toggleEnableInput res", res);
-            })
-            .catch(err =>
-              console.log("************toggleEnableInput err", err)
-            );
           // send patch to server
           // revert to previous config (might need to have pendingConfig)
         }
       );
     }
   };
-  if (!socket.hasListeners("acknowledge update to control")) {
-    socket.on("acknowledge update to control", ({ key, value, id, origin }) => {
-      console.log(
-        "************ acknowledge update to control",
-        key,
-        value,
-        id,
-        origin
-      );
+  socket.removeAllListeners("acknowledge update to control");
+  socket.on(
+    "acknowledge update to control",
+    async ({ key, value, id, origin }) => {
       if (origin !== userId) {
         updateConfigHelper(key, value);
         return;
       }
-      axios({
-        method: "patch",
-        url: `http://${process.env.REACT_APP_DEV_SERVER}/vehicles/${id}`,
-        data: {
-          key,
-          value
-        }
-      })
-        .then(() => {
-          updateConfigHelper(key, value);
-          // remove delivered, flash success
-        })
-        .catch(err => console.log("************ addProperty err", err));
-    });
-  }
+      try {
+        await axios({
+          method: "patch",
+          url: `http://${process.env.REACT_APP_DEV_SERVER}/vehicles/${id}`,
+          data: {
+            key,
+            value
+          }
+        });
+        updateConfigHelper(key, value);
+        // remove delivered, flash success
+      } catch (err) {
+        console.log("************ addProperty err", err);
+      }
+    }
+  );
 
   const formItemLayout = {
     labelCol: {

@@ -19,10 +19,6 @@ export const Provider = props => {
     }
   };
 
-  useEffect(() => {
-    getVehicles();
-  }, []);
-
   const updateVehicle = ({ vehicleId, temperature, x, y }) => {
     if (!vehicles.length) return;
     const idx = vehicles.findIndex(obj => obj._id === vehicleId);
@@ -33,6 +29,10 @@ export const Provider = props => {
 
     setVehicles(newVehicles);
   };
+
+  useEffect(() => {
+    getVehicles();
+  }, []);
 
   const vehiclesContext = {
     vehicles,

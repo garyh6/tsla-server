@@ -26,6 +26,8 @@ const checkImmutableKeys = (req, res, next) => {
 
 // Get all Vehicles
 router.get("/", async (req, res) => {
+  console.log("get");
+
   try {
     const vehicles = await Vehicle.find();
     res.json(vehicles);
@@ -36,6 +38,7 @@ router.get("/", async (req, res) => {
 
 // Update Properties of Vehicle
 router.patch("/:id", getVehicle, checkImmutableKeys, async (req, res) => {
+  console.log("update", req.body.key);
   const key = req.body.key;
   const value = req.body.value;
   if (key === null && value === null) {
@@ -55,6 +58,8 @@ router.patch("/:id", getVehicle, checkImmutableKeys, async (req, res) => {
 
 // Delete Properties of Vehicle
 router.delete("/:id", getVehicle, checkImmutableKeys, async (req, res) => {
+  console.log("delete", req.body.key);
+
   const key = req.body.key;
   if (key != null) {
     delete res.vehicle.properties[key];
@@ -74,6 +79,7 @@ router.patch(
   "/:id/internal",
   getVehicle,
   async ({ body: { temperature, x, y } }, res) => {
+    console.log("************ internal", res.vehicle.x);
     res.vehicle.temperature = temperature;
     res.vehicle.x = x;
     res.vehicle.y = y;

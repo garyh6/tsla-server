@@ -7,10 +7,6 @@ var whitelist = [
 ];
 export const corsOptions = {
   origin: function(origin, callback) {
-    console.log(
-      "************ process.env.CLIENT_PORT",
-      process.env.CLIENT_PORT
-    );
     console.log("************ origin", origin);
     if (whitelist.indexOf(origin) !== -1 || !origin) {
       callback(null, true);

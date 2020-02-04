@@ -1,6 +1,6 @@
 import { Col } from "antd";
 import React, { useContext } from "react";
-import { Context } from "../../VehiclesContext";
+import { Context } from "../../contexts/VehiclesContext";
 import Properties from "../Properties";
 import "./properties.scss";
 const Vehicles = () => {

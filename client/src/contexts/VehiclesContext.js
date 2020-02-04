@@ -5,6 +5,7 @@ export const Context = createContext({});
 export const Provider = props => {
   const { children } = props;
   const [vehicles, setVehicles] = useState([]);
+  // todo - have loader
   const [loading, setLoading] = useState(true);
 
   const getVehicles = async () => {

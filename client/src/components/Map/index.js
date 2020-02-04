@@ -1,16 +1,12 @@
 import { Col } from "antd";
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import uuid from "uuid";
 import { Context } from "../../contexts/VehiclesContext";
+import Thing from "../Utility/Thing";
 import SVG from "./gridSVG";
 import "./map.scss";
 
 const Vehicle = ({ data: { x, y } }) => {
-  return <circle cx={x} cy={y} r="10" fill="#ff80b0" stroke="black" />;
-};
-
-const Thing = ({ x, y }) => {
-  const [position, setPosition] = useState({ x: 200, y: 200 });
   return <circle cx={x} cy={y} r="10" fill="#ff80b0" stroke="black" />;
 };
 
@@ -29,6 +25,7 @@ const Map = () => {
           {vehicles.map(data => (
             <Vehicle data={data} key={uuid()}></Vehicle>
           ))}
+          <Thing></Thing>
         </SVG>
       </Col>
     </div>

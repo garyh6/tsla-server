@@ -10,18 +10,14 @@ export const socket = io("http://localhost:5000", {
 });
 
 export const emitPatchProperty = (data, cb) => {
-  console.log("************ socket.js emit patch", data);
   socket.emit("patch property from control", data, (err, res) => {
-    console.log("something back");
     if (err) return cb(err);
     cb(null, res);
   });
 };
 
 export const emitDeleteProperty = (data, cb) => {
-  console.log("************ emit delete");
   socket.emit("delete property from control", data, (err, res) => {
-    console.log("got back from delete");
     if (err) return cb(err);
     cb(null, res);
   });
@@ -32,7 +28,6 @@ export const streamEvents = ({ setStreamLog }, cb) => {
   socket.on(
     "new stream data from vehicle",
     async ({ vehicleId, temperature, x, y, datetime }) => {
-      // console.log("new stream data", vehicleId, temperature, x, y, datetime);
       const locationMsg = `${datetime} - Vehicle ${vehicleId} is at (${x}, ${y}).`;
       const tempMsg = `${datetime} - Vehicle ${vehicleId} temperature is ${temperature} C.`;
 
@@ -51,7 +46,6 @@ export const streamEvents = ({ setStreamLog }, cb) => {
           }
         });
         // need to update component state of Properties
-        // console.log("************ updating dd", vehicles);
         // this will so die with more vehicles
         return cb(null, { vehicleId, temperature, x, y });
       } catch (err) {

@@ -61,7 +61,6 @@ const Properties = ({ vehicleConfig }) => {
         // change to flash error
         // dont setConfig
 
-        console.log("************ should say success", res);
         // remove from pending
         // add to pending config as delivered
         // set to delivered
@@ -77,7 +76,6 @@ const Properties = ({ vehicleConfig }) => {
   // kind of hacky - duplicate listeners per vehicle, per rerender
   if (!socket.hasListeners("acknowledge update to control")) {
     socket.on("acknowledge update to control", ({ key, value, id }) => {
-      console.log("************ acknowledge update to control", key, value, id);
       axios({
         method: "patch",
         url: `http://${process.env.REACT_APP_DEV_SERVER}/vehicles/${id}`,
@@ -87,7 +85,6 @@ const Properties = ({ vehicleConfig }) => {
         }
       })
         .then(() => {
-          console.log("************ addProperty res");
           updateConfigHelper(key, value);
           // remove delivered, flash success
         })
@@ -98,7 +95,6 @@ const Properties = ({ vehicleConfig }) => {
     socket.on(
       "pending update from controller",
       ({ newKey: key, newValue: value }) => {
-        console.log("got a pending update from another controller", key, value);
         updateConfigHelper(key, value);
       }
     );
@@ -106,10 +102,6 @@ const Properties = ({ vehicleConfig }) => {
 
   if (!socket.hasListeners("acknowledge delete to control")) {
     socket.on("acknowledge delete to control", ({ key, origin, id }) => {
-      console.log("************ acknowledge delete to control", key, id);
-      console.log("************ origin", origin);
-      console.log("************ userId", userId);
-
       axios({
         method: "delete",
         url: `http://${process.env.REACT_APP_DEV_SERVER}/vehicles/${id}`,
@@ -118,7 +110,6 @@ const Properties = ({ vehicleConfig }) => {
         }
       })
         .then(() => {
-          console.log("************ end delete res");
           let newProps = { ...config };
           delete newProps.properties[key];
           setConfig(newProps);
@@ -135,7 +126,6 @@ const Properties = ({ vehicleConfig }) => {
         if (err) return console.log("emit delete err");
         // delete from sever
         // set to pending
-        console.log("set to pending");
       }
     );
   };
@@ -153,7 +143,6 @@ const Properties = ({ vehicleConfig }) => {
 
     if (idx >= 0) {
       // send patch to socket
-      console.log("************ elRef", elRef);
       emitPatchProperty(
         {
           origin: userId,
@@ -163,11 +152,6 @@ const Properties = ({ vehicleConfig }) => {
         },
         (err, res) => {
           if (err) return console.log("************ emit patch err");
-          console.log("************ elRef 2", elRef);
-          console.log("************ idx", refIdx);
-          console.log("************ elRef.current[idx]", elRef.current[idx]);
-
-          // console.log("************ should say success", res);
 
           axios({
             method: "patch",
@@ -211,7 +195,6 @@ const Properties = ({ vehicleConfig }) => {
         }
       })
         .then(() => {
-          console.log("************ addProperty res");
           updateConfigHelper(key, value);
           // remove delivered, flash success
         })

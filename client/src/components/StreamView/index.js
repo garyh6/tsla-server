@@ -9,19 +9,17 @@ const StreamView = () => {
   const [streamLog, setStreamLog] = useState([]);
   const endOfLogRef = useRef();
   const { vehicles, updateVehicle } = useContext(Context);
-  // console.log("************ vehicles", vehicles);
 
   useEffect(() => {
     endOfLogRef.current.scrollIntoView({
       behavior: "smooth",
-      block: "nearest",
-      inline: "start"
+      block: "nearest"
     });
   }, [streamLog]);
 
   useEffect(() => {
+    // todo exhaustive dep error
     streamEvents({ setStreamLog }, (err, { vehicleId, temperature, x, y }) => {
-      console.log("************ var ");
       updateVehicle({ vehicleId, temperature, x, y });
     });
   }, [vehicles]);

@@ -14,7 +14,6 @@ const SVG = ({
     strokeDasharray: "1, 50",
     strokeWidth: width
   };
-  console.log("************ width", width);
   return (
     <svg width={width} height={height} viewBox={viewBox}>
       <rect fill={fill} width="100%" height="100%" />

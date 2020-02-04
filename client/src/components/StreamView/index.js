@@ -9,9 +9,10 @@ const StreamView = () => {
   // todo should probably save to db - oh well
   const [streamLog, setStreamLog] = useState([]);
   const endOfLogRef = useRef();
-  const { vehicles, updateVehicle } = useContext(Context);
+  const { updateVehicle } = useContext(Context);
 
   useEffect(() => {
+    // tod is this causing Forced reflow while executing JavaScript
     endOfLogRef.current.scrollIntoView({
       behavior: "smooth",
       block: "nearest"

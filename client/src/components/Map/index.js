@@ -2,12 +2,17 @@ import { Col } from "antd";
 import React, { useContext } from "react";
 import uuid from "uuid";
 import { Context } from "../../contexts/VehiclesContext";
+import Draggable from "../Utility/DraggableWrapper";
 import Thing from "../Utility/Thing";
 import SVG from "./gridSVG";
 import "./map.scss";
 
 const Vehicle = ({ data: { x, y } }) => {
-  return <circle cx={x} cy={y} r="10" fill="#ff80b0" stroke="black" />;
+  return (
+    <Draggable origin={{ x, y }}>
+      <circle cx={x} cy={y} r="10" fill="#ff80b0" stroke="black" />
+    </Draggable>
+  );
 };
 
 const Map = () => {

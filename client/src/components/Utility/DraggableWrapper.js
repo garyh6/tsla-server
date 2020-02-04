@@ -1,7 +1,10 @@
 import React, { useState } from "react";
-const Thing = () => {
+const Draggable = ({ children, origin }) => {
   const [dragging, setDragging] = useState(false);
-  const [translate, setTranslate] = useState({ x: 200, y: 200 });
+  const [translate, setTranslate] = useState({
+    x: origin?.x || 200,
+    y: origin?.y || 200
+  });
 
   const onMouseDown = e => {
     setDragging(true);
@@ -16,6 +19,7 @@ const Thing = () => {
     }
   };
 
+  // todo should reset if dragging outside of box
   const onMouseUp = e => {
     setDragging(false);
   };
@@ -26,15 +30,21 @@ const Thing = () => {
     transition: dragging ? "none" : "transform 300ms"
   };
 
+  const propsToChildren = () => {
+    const newChildren = React.Children.map(children, child => {
+      return React.cloneElement(child, {
+        ...child.props,
+        cx: translate.x,
+        cy: translate.y
+      });
+    });
+
+    return newChildren;
+  };
+
   return (
     <g>
-      <circle
-        cx={translate.x}
-        cy={translate.y}
-        r="10"
-        fill="blue"
-        stroke="black"
-      />
+      {propsToChildren()}
       <circle
         style={style}
         opacity="0"
@@ -49,4 +59,4 @@ const Thing = () => {
   );
 };
 
-export default Thing;
+export default Draggable;

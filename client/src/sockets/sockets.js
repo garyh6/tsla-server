@@ -31,7 +31,7 @@ export const streamEvents = ({ setStreamLog }, cb) => {
   socket.removeAllListeners("new stream data from vehicle");
   socket.on(
     "new stream data from vehicle",
-    ({ vehicleId, temperature, x, y, datetime }) => {
+    async ({ vehicleId, temperature, x, y, datetime }) => {
       // console.log("new stream data", vehicleId, temperature, x, y, datetime);
       const locationMsg = `${datetime} - Vehicle ${vehicleId} is at (${x}, ${y}).`;
       const tempMsg = `${datetime} - Vehicle ${vehicleId} temperature is ${temperature} C.`;
@@ -41,9 +41,9 @@ export const streamEvents = ({ setStreamLog }, cb) => {
       setStreamLog(msg => [...msg, locationMsg, tempMsg]);
 
       try {
-        axios({
+        await axios({
           method: "patch",
-          url: `/vehicles/${vehicleId}/internal`,
+          url: `http://${process.env.REACT_APP_DEV_SERVER}/vehicles/${vehicleId}/internal`,
           data: {
             temperature,
             x,

@@ -80,7 +80,7 @@ const Properties = ({ vehicleConfig }) => {
       console.log("************ acknowledge update to control", key, value, id);
       axios({
         method: "patch",
-        url: `/vehicles/${id}`,
+        url: `http://${process.env.REACT_APP_DEV_SERVER}/vehicles/${id}`,
         data: {
           key,
           value
@@ -112,7 +112,7 @@ const Properties = ({ vehicleConfig }) => {
 
       axios({
         method: "delete",
-        url: `/vehicles/${id}`,
+        url: `http://${process.env.REACT_APP_DEV_SERVER}/vehicles/${id}`,
         data: {
           key
         }
@@ -171,7 +171,7 @@ const Properties = ({ vehicleConfig }) => {
 
           axios({
             method: "patch",
-            url: `/vehicles/${config._id}`,
+            url: `http://${process.env.REACT_APP_DEV_SERVER}/vehicles/${config._id}`,
             data: {
               key,
               value: elRef.current[refIdx].state.value
@@ -204,7 +204,7 @@ const Properties = ({ vehicleConfig }) => {
       }
       axios({
         method: "patch",
-        url: `/vehicles/${id}`,
+        url: `http://${process.env.REACT_APP_DEV_SERVER}/vehicles/${id}`,
         data: {
           key,
           value

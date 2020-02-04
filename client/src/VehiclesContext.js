@@ -1,6 +1,5 @@
 import axios from "axios";
 import React, { createContext, useEffect, useState } from "react";
-
 export const Context = createContext({});
 
 export const Provider = props => {
@@ -12,8 +11,14 @@ export const Provider = props => {
   // console.log("************ vehicles", vehicles);
 
   const getVehicles = async () => {
+    console.log(
+      "************ REACT_APP_DEV_SERVER",
+      process.env.REACT_APP_DEV_SERVER
+    );
     try {
-      const { data } = await axios.get("/vehicles");
+      const { data } = await axios.get(
+        `http://${process.env.REACT_APP_DEV_SERVER}/vehicles`
+      );
       setVehicles(data);
       setLoading(false);
       // console.log("set vehiclessss");

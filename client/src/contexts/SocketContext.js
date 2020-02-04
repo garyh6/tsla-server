@@ -14,14 +14,12 @@ export const SocketProvider = props => {
 
   const emitPatchProperty = (data, cb) => {
     socket.emit("patch property from control", data, (err, res) => {
-      console.log("emit patch context");
       if (err) return cb(err);
       cb(null, res);
     });
   };
 
   const emitDeleteProperty = (data, cb) => {
-    console.log("************ delateasdfjaklsd");
     socket.emit("delete property from control", data, (err, res) => {
       if (err) return cb(err);
       cb(null, res);

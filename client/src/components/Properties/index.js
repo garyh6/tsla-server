@@ -74,7 +74,6 @@ const Properties = ({ vehicleConfig }) => {
 
   socket.removeAllListeners("acknowledge update to control");
   socket.on("acknowledge update to control", async ({ key, value, id }) => {
-    console.log("hope this workssss");
     try {
       await axios({
         method: "patch",
@@ -114,7 +113,6 @@ const Properties = ({ vehicleConfig }) => {
       let newConfig = { ...config };
       delete newConfig.properties[key];
       setConfig(newConfig);
-      console.log("************ shouldve worked", newConfig);
       // remove delivered, flash success
     } catch (err) {
       return console.log("************ end delete err", err);
@@ -128,7 +126,6 @@ const Properties = ({ vehicleConfig }) => {
         if (err) return console.log("emit delete err");
         // delete from sever
         // set to pending
-        console.log("************ 2 delete");
       }
     );
   };
@@ -164,7 +161,6 @@ const Properties = ({ vehicleConfig }) => {
                 value: elRef.current[refIdx].state.value
               }
             });
-            console.log("************toggleEnableInput res", res);
           } catch (err) {
             console.log("************toggleEnableInput err", err);
           }
@@ -210,7 +206,6 @@ const Properties = ({ vehicleConfig }) => {
       sm: { span: 14 }
     }
   };
-  // todo allow copy paste of disabled
   return (
     <Row span={24} className="wrapper-form">
       <Form {...formItemLayout}>

@@ -1,11 +1,9 @@
 import React from "react";
 
 const SVG = ({
-  style = {},
   fill = "#000",
   width = "100%",
   height = "100%",
-  className = "",
   viewBox = "0 0 500 500",
   children
 }) => {

@@ -12,7 +12,7 @@ const StreamView = () => {
   const { updateVehicle } = useContext(Context);
 
   useEffect(() => {
-    // tod is this causing Forced reflow while executing JavaScript
+    // tod0 is this causing Forced reflow while executing JavaScript
     endOfLogRef.current.scrollIntoView({
       behavior: "smooth",
       block: "nearest"
@@ -40,8 +40,6 @@ const StreamView = () => {
             y
           }
         });
-        // need to update component state of Properties
-        // this will so die with more vehicles
         updateVehicle({ vehicleId, temperature, x, y });
       } catch (err) {
         if (err) return console.log("patch err", err);

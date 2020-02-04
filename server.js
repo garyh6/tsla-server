@@ -1,26 +1,12 @@
 require("dotenv").config();
-
 const express = require("express");
-const app = express();
-const mongoose = require("mongoose");
-const cors = require("cors");
+import cors from "cors";
+import mongoose from "mongoose";
+import { corsOptions } from "./cors";
+import vehicleRouter from "./routes";
 
-var whitelist = [
-  `http://localhost:${process.env.CLIENT_PORT}`,
-  `http://localhost:${process.env.CLIENT_PORT}/`,
-  `http://127.0.0.1:${process.env.CLIENT_PORT}`,
-  `http://127.0.0.1:${process.env.CLIENT_PORT}/`
-];
-const corsOptions = {
-  origin: function(origin, callback) {
-    console.log("************ origin", origin);
-    if (whitelist.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  }
-};
+const app = express();
+
 app.use(cors(corsOptions));
 
 mongoose.connect(process.env.DATABASE_URL, {
@@ -33,7 +19,6 @@ db.once("open", () => console.log("Connected to Database"));
 
 app.use(express.json());
 
-const vehicleRouter = require("./routes");
 app.use("/vehicles", vehicleRouter);
 
 app.listen(process.env.SERVER_PORT, () =>

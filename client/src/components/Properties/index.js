@@ -171,30 +171,6 @@ const Properties = ({ vehicleConfig }) => {
       );
     }
   };
-  socket.removeAllListeners("acknowledge update to control");
-  socket.on(
-    "acknowledge update to control",
-    async ({ key, value, id, origin }) => {
-      if (origin !== userId) {
-        updateConfigHelper(key, value);
-        return;
-      }
-      try {
-        await axios({
-          method: "patch",
-          url: `http://${process.env.REACT_APP_DEV_SERVER}/vehicles/${id}`,
-          data: {
-            key,
-            value
-          }
-        });
-        updateConfigHelper(key, value);
-        // remove delivered, flash success
-      } catch (err) {
-        console.log("************ addProperty err", err);
-      }
-    }
-  );
 
   const formItemLayout = {
     labelCol: {
